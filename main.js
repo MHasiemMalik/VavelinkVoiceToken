@@ -38,13 +38,23 @@ let volumeTimeouts = {}; // --- NEW: Object to store timeouts for resetting glow
 
 // --- Token Fetching ---
 const fetchToken = async (endpoint, params) => {
+    // Get the server URL from the environment variable (set in Vercel/Netlify for deployment)
+    // Provide localhost as a fallback for local development (`npm run dev`)
+    const serverUrl = import.meta.env.VITE_TOKEN_SERVER_URL || 'http://localhost:8080'; 
+
+    // Log the URL being used for easier debugging
+    console.log(`Fetching token from: ${serverUrl}/${endpoint}?${params}`); 
+
     try {
-        const response = await fetch(`http://localhost:8080/${endpoint}?${params}`);
-        if (!response.ok) throw new Error(`Failed to fetch token from ${endpoint}`);
+        const response = await fetch(`${serverUrl}/${endpoint}?${params}`); // Use the serverUrl variable
+        if (!response.ok) throw new Error(`Failed to fetch token from ${endpoint}. Status: ${response.status}`);
         const data = await response.json();
+        if (!data.token) throw new Error(`Token received from server was empty or invalid for ${endpoint}`);
         return data.token;
     } catch (error) {
         console.error("Token fetch error:", error);
+         // Give a more specific alert
+        alert(`Failed to get token from server (${endpoint}). Check console for details.`);
         return null;
     }
 };
